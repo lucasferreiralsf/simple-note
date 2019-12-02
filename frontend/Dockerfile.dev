@@ -1,0 +1,19 @@
+FROM node:10-alpine
+# RUN apk update && apk upgrade && apk --no-cache add --virtual builds-deps build-base python
+# RUN npm i -g npm
+# Setting working directory. All the path will be relative to WORKDIR
+RUN mkdir -p /opt/simplenote_frontend/frontend_dev
+WORKDIR /opt/simplenote_frontend/frontend_dev
+
+# Installing dependencies
+COPY ./frontend/package.json /opt/simplenote_frontend/frontend_dev/package.json
+RUN npm install
+
+# Copying source files
+COPY ./frontend /opt/simplenote_frontend/frontend_dev
+
+# Building app
+RUN npm run build
+
+# Running the app
+CMD [ "npm", "start" ]

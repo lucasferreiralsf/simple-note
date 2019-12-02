@@ -1,0 +1,55 @@
+version: '3'
+services:
+  simplenote_devapi:
+    container_name: simplenote_devapi
+    image: lucasferreira/simplenoteapp_devapi:latest
+    environment:
+      - NODE_ENV=dev
+      - MAILGUN=${MAILGUN}
+    volumes:
+      # - './api:/simplenote/api_dev'
+      - /simplenote/api_dev/node_modules
+    ports:
+      - '7002:3000'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web_default"
+      - "traefik.http.routers.simplenote_devapi.rule=Host(`simplenotedevapi.becoder.com.br`)"
+      - "traefik.http.routers.simplenote_devapi.entrypoints=web"
+      - "traefik.http.routers.simplenote_devapi.middlewares=https_redirect"
+      - "traefik.http.routers.simplenote_devapisecure.rule=Host(`simplenotedevapi.becoder.com.br`)"
+      - "traefik.http.routers.simplenote_devapisecure.entrypoints=websecure"
+      - "traefik.http.routers.simplenote_devapisecure.tls.certresolver=letsencrypt"
+      - "traefik.http.services.simplenote_devapisecure.loadbalancer.server.port=7002"
+    networks:
+      - web_default
+      - docker_simplenote_dev
+
+  simplenote_frontend_dev:
+    container_name: simplenote_frontend_dev
+    image: lucasferreira/simplenote_frontend_dev:latest
+    environment:
+      - NODE_ENV=development
+    volumes:
+      # - './frontend:/opt/simplenote_frontend/frontend_dev'
+      - /opt/simplenote_frontend/frontend_dev/node_modules
+    ports:
+      - '7004:3000'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web_default"
+      - "traefik.http.routers.simplenote_frontend_dev_web.rule=Host(`simplenotedev.becoder.com.br`)"
+      - "traefik.http.routers.simplenote_frontend_dev_web.entrypoints=web"
+      - "traefik.http.routers.simplenote_frontend_dev_web.middlewares=https_redirect"
+      - "traefik.http.routers.simplenote_frontend_dev_websecure.rule=Host(`simplenotedev.becoder.com.br`)"
+      - "traefik.http.routers.simplenote_frontend_dev_websecure.entrypoints=websecure"
+      - "traefik.http.routers.simplenote_frontend_dev_websecure.tls.certresolver=letsencrypt"
+    networks:
+      - web_default
+      - docker_simplenote_dev
+
+networks:
+  web_default:
+    external: true
+  docker_simplenote_dev:
+    external: false

@@ -1,0 +1,134 @@
+---
+kind: pipeline
+type: docker
+name: developer
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+
+- name: "Dev Api"
+  image: docker:dind
+  environment:
+    npm_config_cache: npm-cache
+    MAILGUN:
+      from_secret: mailgun_secret
+  volumes:
+    - name: docker_sock
+      path: /var/run/docker.sock
+  commands:
+    - sleep 5
+    - docker build --no-cache --file="./api/Dockerfile" -t lucasferreira/simplenoteapp_devapi:latest .
+
+- name: "Dev Frontend"
+  image: docker:dind
+  environment:
+    npm_config_cache: npm-cache
+  volumes:
+    - name: docker_sock
+      path: /var/run/docker.sock
+  commands:
+    - sleep 5
+    - docker build --no-cache --file="./frontend/Dockerfile.dev" -t lucasferreira/simplenote_frontend_dev:latest .
+
+- name: "Dev deploy"
+  image: docker/compose:1.25.0-rc2
+  volumes:
+    - name: docker_sock
+      path: /var/run/docker.sock
+  environment:
+    MAILGUN:
+      from_secret: mailgun_secret
+  commands:
+    - docker-compose -f docker-compose.dev.yml up -d --remove-orphans --renew-anon-volumes
+
+services:
+- name: docker
+  image: docker/compose:1.25.0-rc2
+  privileged: true
+  volumes:
+  - name: docker_sock
+    path: /var/run/docker.sock
+
+- name: dockerdind
+  image: docker:dind
+  privileged: true
+  volumes:
+  - name: docker_sock
+    path: /var/run/docker.sock
+
+volumes:
+  - name: docker_sock
+    host:
+      path: /var/run/docker.sock
+
+trigger:
+  branch:
+    - develop
+
+---
+kind: pipeline
+type: docker
+name: production
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+
+- name: "Prod Api"
+  image: docker:dind
+  volumes:
+    - name: docker_sock
+      path: /var/run/docker.sock
+  environment:
+    MAILGUN:
+      from_secret: mailgun_secret
+  commands:
+    - docker build --no-cache --file="./api/Dockerfile" -t lucasferreira/simplenoteapp_api:latest .
+
+- name: "Prod Frontend"
+  image: docker:dind
+  volumes:
+    - name: docker_sock
+      path: /var/run/docker.sock
+  commands:
+    - docker build --no-cache --file="./frontend/Dockerfile" -t lucasferreira/simplenote_frontend:latest .
+
+- name: "Prod deploy"
+  image: docker/compose:1.25.0-rc2
+  volumes:
+    - name: docker_sock
+      path: /var/run/docker.sock
+  environment:
+    MAILGUN:
+      from_secret: mailgun_secret
+  commands:
+    - docker-compose -f docker-compose.prod.yml up -d --remove-orphans --renew-anon-volumes
+
+services:
+- name: docker
+  image: docker/compose:1.25.0-rc2
+  privileged: true
+  volumes:
+  - name: docker_sock
+    path: /var/run/docker.sock
+
+- name: dockerdind
+  image: docker:dind
+  privileged: true
+  volumes:
+  - name: docker_sock
+    path: /var/run/docker.sock
+
+volumes:
+  - name: docker_sock
+    host:
+      path: /var/run/docker.sock
+
+trigger:
+  branch:
+    - master

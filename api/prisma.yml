@@ -1,0 +1,20 @@
+endpoint: https://prisma.becoder.com.br/simplenote/${env:NODE_ENV}
+secret: 79dea521ddb251eb9700d849fa5fbf94
+
+datamodel: 
+  - prisma/user.prisma
+  - prisma/tag.prisma
+  - prisma/note.prisma
+
+databaseType: document
+ 
+
+generate:
+  - generator: typescript-client
+    output: src/prisma/prisma-client
+  - generator: graphql-schema
+    output: src/prisma/prisma.graphql
+
+# hooks:
+#   post-deploy:
+#     - prisma generate

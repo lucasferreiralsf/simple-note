@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-note-backend-prod
+spec:
+  selector:
+    matchLabels:
+      app: simple-note-backend-prod
+  template:
+    metadata:
+      labels:
+        app: simple-note-backend-prod
+    spec:
+      containers:
+      - name: simple-note-backend-prod 
+        image: <Image>
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8003

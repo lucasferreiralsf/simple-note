@@ -1,0 +1,55 @@
+version: '3'
+services:
+  simplenote_api:
+    container_name: simplenote_api
+    image: lucasferreira/simplenoteapp_api:latest
+    environment:
+      - NODE_ENV=prod
+      - MAILGUN=${MAILGUN}
+    volumes:
+      # - './api:/simplenote/api'
+      - /simplenote/api/node_modules
+    ports:
+      - '7001:3000'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web_default"
+      - "traefik.http.routers.simplenote_api.rule=Host(`simplenoteapi.becoder.com.br`)"
+      - "traefik.http.routers.simplenote_api.entrypoints=web"
+      - "traefik.http.routers.simplenote_api.middlewares=https_redirect"
+      - "traefik.http.routers.simplenote_apisecure.rule=Host(`simplenoteapi.becoder.com.br`)"
+      - "traefik.http.routers.simplenote_apisecure.entrypoints=websecure"
+      - "traefik.http.routers.simplenote_apisecure.tls.certresolver=letsencrypt"
+      - "traefik.http.services.simplenote_apisecure.loadbalancer.server.port=7001"
+    networks:
+      - web_default
+      - docker_simplenote
+
+  simplenote_frontend:
+    container_name: simplenote_frontend
+    image: lucasferreira/simplenote_frontend:latest
+    environment:
+      - NODE_ENV=production
+    volumes:
+      # - './frontend:/opt/simplenote_frontend/frontend'
+      - /opt/simplenote_frontend/frontend/node_modules
+    ports:
+      - '7003:3000'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web_default"
+      - "traefik.http.routers.simplenote_frontend_web.rule=Host(`simplenote.becoder.com.br`)"
+      - "traefik.http.routers.simplenote_frontend_web.entrypoints=web"
+      - "traefik.http.routers.simplenote_frontend_web.middlewares=https_redirect"
+      - "traefik.http.routers.simplenote_frontend_websecure.rule=Host(`simplenote.becoder.com.br`)"
+      - "traefik.http.routers.simplenote_frontend_websecure.entrypoints=websecure"
+      - "traefik.http.routers.simplenote_frontend_websecure.tls.certresolver=letsencrypt"
+    networks:
+      - web_default
+      - docker_simplenote
+
+networks:
+  web_default:
+    external: true
+  docker_simplenote:
+    external: false
